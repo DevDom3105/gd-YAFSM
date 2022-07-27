@@ -50,6 +50,12 @@ func _ready():
 	set_process(false)
 	set_physics_process(false)
 	call_deferred("_initiate") # Make sure connection of signals can be done in _ready to receive all signal callback
+	
+	#TODO: better way to solve this? Are nested states a issue?
+	for st in state_machine.states:
+		var s = state_machine.states[st]
+		if s.state != null:
+			s.state = s.state.new()
 
 func _initiate():
 	if autostart:
@@ -77,13 +83,23 @@ func _physics_process(delta):
 func _transit():
 	if not active:
 		return
-	# Attempt to transit if parameter edited or last transition was successful
-	if not _is_param_edited and not _was_transited:
+	# Attempt to transit if parameter edited, last transition was successful, or when current state has a FunctionCondition
+	var has_function_condition = false
+	if get_current() in state_machine.transitions.keys():
+		var from_transitions = state_machine.transitions.get(get_current())
+		for t in from_transitions.values():
+			if t.has_FunctionCondition():
+				has_function_condition = true
+				break
+	
+	if (not _is_param_edited and not _was_transited) and not has_function_condition:
 		return
-
+	
+	
 	var from = get_current()
 	var local_params = _local_parameters.get(path_backward(from), {})
-	var next_state = state_machine.transit(get_current(), _parameters, local_params)
+	#TODO: if implement 'get_extern()' still needed to pass self? var next_state = state_machine.transit(get_current(), _parameters, local_params)
+	var next_state = state_machine.transit(get_current(), _parameters, local_params, self)
 	if next_state:
 		if stack.has(next_state):
 			reset(stack.find(next_state))
@@ -115,6 +131,14 @@ func _on_state_changed(from, to):
 		var state = path_backward(get_current())
 		clear_param(state, false) # Clearing params internally, do not update
 		emit_signal("exited", state)
+	
+	var from_worker = state_machine.states[from].state
+	var to_worker = state_machine.states[to].state
+	#TODO: if implement 'get_extern()' still needed to pass self? 
+	if from_worker != null:
+		from_worker.exit(self)
+	if to_worker != null:
+		to_worker.enter(self)
 
 	emit_signal("transited", from, to)
 
@@ -202,6 +226,10 @@ func update(delta=get_physics_process_delta_time()):
 		# Make sure to auto advance even in MANUAL mode
 		if _was_transited:
 			call_deferred("update")
+	#TODO: if implement 'get_extern()' still needed to pass self? 
+	var state_worker = state_machine.states[current_state].state
+	if state_worker != null:
+		state_worker.update(self)
 
 # Set trigger to be tested with condition, then trigger _transit on next update, 
 # automatically call update() if process_mode set to MANUAL and auto_update true

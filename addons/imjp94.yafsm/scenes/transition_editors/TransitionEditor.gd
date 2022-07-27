@@ -12,6 +12,8 @@ const BoolConditionEditor = preload("../condition_editors/BoolConditionEditor.ts
 const IntegerConditionEditor = preload("../condition_editors/IntegerConditionEditor.tscn")
 const FloatConditionEditor = preload("../condition_editors/FloatConditionEditor.tscn")
 const StringConditionEditor = preload("../condition_editors/StringConditionEditor.tscn")
+const FunctionCondition = preload("../../src/conditions/FunctionCondition.gd")
+const FunctionConditionEditor = preload("../condition_editors/FunctionConditionEditor.tscn")
 
 onready var header = $HeaderContainer/Header
 onready var title = $HeaderContainer/Header/Title
@@ -72,6 +74,8 @@ func _on_add_popup_menu_index_pressed(index):
 			condition = FloatCondition.new()
 		4: # String
 			condition = StringCondition.new()
+		5: # Function
+			condition = FunctionCondition.new()
 		_:
 			push_error("Unexpected index(%d) from PopupMenu" % index)
 	var editor = create_condition_editor(condition)
@@ -148,6 +152,8 @@ func create_condition_editor(condition):
 		editor = FloatConditionEditor.instance()
 	elif condition is StringCondition:
 		editor = StringConditionEditor.instance()
+	elif condition is FunctionCondition:
+		editor = FunctionConditionEditor.instance()
 	else:
 		editor = ConditionEditor.instance()
 	return editor

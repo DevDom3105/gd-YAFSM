@@ -4,11 +4,13 @@ extends Resource
 signal condition_added(condition)
 signal condition_removed(condition)
 
+
 export(String) var from # Name of state transiting from
 export(String) var to # Name of state transiting to
 export(Dictionary) var conditions setget ,get_conditions # Conditions to transit successfuly, keyed by Condition.name
 export(int) var priority = 0 # Higher the number, higher the priority
 
+var has_function_condition = false
 
 func _init(p_from="", p_to="", p_conditions={}):
 	from = p_from
@@ -16,8 +18,9 @@ func _init(p_from="", p_to="", p_conditions={}):
 	conditions = p_conditions
 
 # Attempt to transit with parameters given, return name of next state if succeeded else null
-func transit(params={}, local_params={}):
+func transit(params={}, local_params={}, state_machine_player_ref=null):
 	var can_transit = conditions.size() > 0
+	
 	for condition in conditions.values():
 		var has_param = params.has(condition.name)
 		var has_local_param = local_params.has(condition.name)
@@ -29,11 +32,27 @@ func transit(params={}, local_params={}):
 			else:
 				if "value" in condition:
 					can_transit = can_transit and condition.compare(value)
+				else:
+					#TODO: Proper case handling
+					print('Invalid condition encountered in transition ', condition.name)
+		elif _is_FunctionCondition(condition):
+			can_transit = can_transit and funcref(condition, 'condition').call_func(state_machine_player_ref)
 		else:
 			can_transit = false
+	
 	if can_transit or conditions.size() == 0:
 		return to
 	return null
+
+func _is_FunctionCondition(condition):
+	#TODO: find clearer way to determine whether condition is a FunctionCondition
+	return 'condition_script' in condition
+
+func has_FunctionCondition():
+	for c in conditions.values():
+		if _is_FunctionCondition(c):
+			return true
+	return false
 
 # Add condition, return true if succeeded
 func add_condition(condition):

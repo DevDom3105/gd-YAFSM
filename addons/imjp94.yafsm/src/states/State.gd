@@ -1,6 +1,8 @@
 tool
 extends Resource
 
+export(Resource) var state = null
+
 signal name_changed(new_name)
 
 # Reserved state name for Entry/Exit
