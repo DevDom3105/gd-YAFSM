@@ -7,7 +7,8 @@ func can_handle(object):
 
 func parse_property(object, type, path, hint, hint_text, usage):
 	# Hide all property
-	return true
+	#return true
+	return false
 	#TODO: How to lock all parts except those the user need to modify (State resource, FunctionCondition resource)
 	#return false
 	#if object is State:

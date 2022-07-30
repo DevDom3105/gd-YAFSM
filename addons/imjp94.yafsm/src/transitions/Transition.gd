@@ -10,7 +10,12 @@ export(String) var to # Name of state transiting to
 export(Dictionary) var conditions setget ,get_conditions # Conditions to transit successfuly, keyed by Condition.name
 export(int) var priority = 0 # Higher the number, higher the priority
 
-var has_function_condition = false
+
+export(Resource) var FCond_Resource setget _set_fcond_res
+onready var _fcond_resource = null
+
+const FunctionCondition = preload('../conditions/FunctionCondition.gd')
+
 
 func _init(p_from="", p_to="", p_conditions={}):
 	from = p_from
@@ -36,7 +41,7 @@ func transit(params={}, local_params={}, state_machine_player_ref=null):
 					#TODO: Proper case handling
 					print('Invalid condition encountered in transition ', condition.name)
 		elif _is_FunctionCondition(condition):
-			can_transit = can_transit and funcref(condition, 'condition').call_func(state_machine_player_ref)
+			can_transit = can_transit and funcref(_fcond_resource, 'condition').call_func(state_machine_player_ref)
 		else:
 			can_transit = false
 	
@@ -44,9 +49,18 @@ func transit(params={}, local_params={}, state_machine_player_ref=null):
 		return to
 	return null
 
+func _set_fcond_res(val):
+	FCond_Resource = val
+	if val != null:
+		_fcond_resource = val.new()
+	else:
+		_fcond_resource = null
+
+
+
 func _is_FunctionCondition(condition):
 	#TODO: find clearer way to determine whether condition is a FunctionCondition
-	return 'condition_script' in condition
+	return condition is FunctionCondition
 
 func has_FunctionCondition():
 	for c in conditions.values():
@@ -54,6 +68,7 @@ func has_FunctionCondition():
 			return true
 	return false
 
+#TODO: Warn user when FunctionContition added, but no fcresource present?
 # Add condition, return true if succeeded
 func add_condition(condition):
 	if condition.name in conditions:

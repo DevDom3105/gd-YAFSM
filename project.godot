@@ -8,19 +8,37 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "State",
+"class": "CustomState",
+"language": "GDScript",
+"path": "res://CustomState.gd"
+}, {
+"base": "",
+"class": "FunctionCondition",
+"language": "GDScript",
+"path": "res://addons/imjp94.yafsm/src/conditions/FunctionCondition.gd"
+}, {
+"base": "Resource",
+"class": "State",
+"language": "GDScript",
+"path": "res://addons/imjp94.yafsm/src/states/StateWorker.gd"
+} ]
 _global_script_class_icons={
-
+"CustomState": "",
+"FunctionCondition": "",
+"State": ""
 }
 
 [application]
 
 config/name="YAFSM"
+run/main_scene="res://test_statemachine.tscn"
 config/icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "imjp94.yafsm" )
+enabled=PoolStringArray( "res://addons/imjp94.yafsm/plugin.cfg", "res://addons/imrp/plugin.cfg" )
 
 [rendering]
 

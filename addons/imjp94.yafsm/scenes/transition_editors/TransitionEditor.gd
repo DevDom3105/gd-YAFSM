@@ -36,6 +36,13 @@ var transition setget set_transition
 var _to_free
 
 
+
+
+export(Resource) onready var FunctionConditionRes = null
+
+
+
+
 func _init():
 	_to_free = []
 
@@ -79,7 +86,7 @@ func _on_add_popup_menu_index_pressed(index):
 		_:
 			push_error("Unexpected index(%d) from PopupMenu" % index)
 	var editor = create_condition_editor(condition)
-	condition.name = transition.get_unique_name("Param")
+	condition.name = transition.get_unique_name("Funcond" if condition is FunctionCondition else "Param")
 	add_condition_editor_action(editor, condition)
 
 func _on_ConditionEditorRemove_pressed(editor):
