@@ -2,6 +2,9 @@ tool
 extends "StackPlayer.gd"
 const State = preload("states/State.gd")
 
+
+const StateMachine = preload("states/StateMachine.gd")
+
 signal transited(from, to) # Transition of state
 signal entered(to) # Entry of state machine(including nested), empty string equals to root
 signal exited(from) # Exit of state machine(including nested, empty string equals to root
@@ -51,11 +54,18 @@ func _ready():
 	set_physics_process(false)
 	call_deferred("_initiate") # Make sure connection of signals can be done in _ready to receive all signal callback
 	
-	#TODO: better way to solve this? Are nested states a issue?
-	for st in state_machine.states:
-		var s = state_machine.states[st]
-		if s.state != null:
+	_instanciate_state_workers(state_machine)
+
+func _instanciate_state_workers(state_machine):
+	for state in state_machine.states.keys():
+		var s = state_machine.states[state]
+		if s is StateMachine:
+			_instanciate_state_workers(s)
+		elif s.state != null:
 			s.state = s.state.new()
+			print("instanciated StateWorker for ", s.name)
+
+
 
 func _initiate():
 	if autostart:
@@ -91,6 +101,9 @@ func _transit():
 			if t.has_FunctionCondition():
 				has_function_condition = true
 				break
+	
+	#TODO: to debug nested case, check for transition every frame
+	has_function_condition = true
 	
 	if (not _is_param_edited and not _was_transited) and not has_function_condition:
 		return
@@ -132,14 +145,15 @@ func _on_state_changed(from, to):
 		clear_param(state, false) # Clearing params internally, do not update
 		emit_signal("exited", state)
 	
-	var from_worker = state_machine.states[from].state
-	var to_worker = state_machine.states[to].state
+	var from_worker = state_machine.get_state(from).state
+	var to_worker = state_machine.get_state(to).state
+		
 	#TODO: if implement 'get_extern()' still needed to pass self? 
 	if from_worker != null:
 		from_worker.exit(self)
 	if to_worker != null:
 		to_worker.enter(self)
-
+	print("StateMachinePlayer: transit ", from, " -> ", to)
 	emit_signal("transited", from, to)
 
 # Called internally if process_mode is PHYSICS/IDLE to unlock update()
@@ -227,7 +241,7 @@ func update(delta=get_physics_process_delta_time()):
 		if _was_transited:
 			call_deferred("update")
 	#TODO: if implement 'get_extern()' still needed to pass self? 
-	var state_worker = state_machine.states[current_state].state
+	var state_worker = state_machine.get_state(current_state).state
 	if state_worker != null:
 		state_worker.update(self)
 
