@@ -21,6 +21,9 @@ export(Resource) var state_machine # StateMachine being played
 export(bool) var active = true setget set_active # Activeness of player
 export(bool) var autostart = true # Automatically enter Entry state on ready if true
 export(ProcessMode) var process_mode = ProcessMode.IDLE setget set_process_mode # ProcessMode of player
+export(Dictionary) var externals = {}
+
+
 
 var _is_started = false
 var _parameters # Parameters to be passed to condition
@@ -53,18 +56,6 @@ func _ready():
 	set_process(false)
 	set_physics_process(false)
 	call_deferred("_initiate") # Make sure connection of signals can be done in _ready to receive all signal callback
-	
-	_instanciate_state_workers(state_machine)
-
-func _instanciate_state_workers(state_machine):
-	for state in state_machine.states.keys():
-		var s = state_machine.states[state]
-		if s is StateMachine:
-			_instanciate_state_workers(s)
-		elif s.state != null:
-			s.state = s.state.new()
-			print("instanciated StateWorker for ", s.name)
-
 
 
 func _initiate():
@@ -144,17 +135,17 @@ func _on_state_changed(from, to):
 		var state = path_backward(get_current())
 		clear_param(state, false) # Clearing params internally, do not update
 		emit_signal("exited", state)
-	
-	var from_worker = state_machine.get_state(from).state
-	var to_worker = state_machine.get_state(to).state
-		
-	#TODO: if implement 'get_extern()' still needed to pass self? 
+	var from_worker = get_state_node(from)
+	var to_worker = get_state_node(to)
 	if from_worker != null:
 		from_worker.exit(self)
 	if to_worker != null:
 		to_worker.enter(self)
 	print("StateMachinePlayer: transit ", from, " -> ", to)
 	emit_signal("transited", from, to)
+
+func get_state_node(state_path):
+	return get_node_or_null(state_path)
 
 # Called internally if process_mode is PHYSICS/IDLE to unlock update()
 func _update_start():
@@ -223,6 +214,14 @@ func restart(is_active=true, preserve_params=false):
 		clear_param("", false)
 	start()
 
+
+func external(name):
+	if not name in externals.keys():
+		printerr('StateMachine does not have entry for extern name ', name)
+		return null
+	else:
+		return get_node(externals[name])
+
 # Update player to, first initiate transition, then call _on_updated, finally emit "update" signal, delta will be given based on process_mode.
 # Can only be called manually if process_mode is MANUAL, otherwise, assertion error will be raised.
 # *delta provided will be reflected in signal updated(state, delta)
@@ -240,8 +239,7 @@ func update(delta=get_physics_process_delta_time()):
 		# Make sure to auto advance even in MANUAL mode
 		if _was_transited:
 			call_deferred("update")
-	#TODO: if implement 'get_extern()' still needed to pass self? 
-	var state_worker = state_machine.get_state(current_state).state
+	var state_worker = get_state_node(current_state)
 	if state_worker != null:
 		state_worker.update(self)
 

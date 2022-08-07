@@ -10,7 +10,6 @@ const EXIT_STATE = "Exit"
 const META_GRAPH_OFFSET = "graph_offset" # Meta key for graph_offset
 
 export(String) var name = "" setget set_name # Name of state, unique within StateMachine
-export(Resource) var state = null
 
 var graph_offset setget set_graph_offset, get_graph_offset # Position in FlowChart stored as meta, for editor only
 

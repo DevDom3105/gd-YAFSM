@@ -1,17 +1,11 @@
-extends Resource
-
+extends Node
 class_name State
 
-var name = ''
-#TODO: neam variable relevant?
-#func _init(n):
-#	name = n
-	
-func enter(player):
+func enter(smp):
 	pass
 
-func update(player):
+func update(smp):
 	pass 
 
-func exit(player):
+func exit(smp):
 	pass

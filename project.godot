@@ -19,7 +19,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/imjp94.yafsm/src/conditions/FunctionCondition.gd"
 }, {
-"base": "Resource",
+"base": "Node",
 "class": "State",
 "language": "GDScript",
 "path": "res://addons/imjp94.yafsm/src/states/StateWorker.gd"

@@ -59,7 +59,7 @@ func _set_fcond_res(val):
 
 
 func _is_FunctionCondition(condition):
-	#TODO: find clearer way to determine whether condition is a FunctionCondition
+	# Find way so FunctionCondition class is not exposed to user. Instead make FunctionConditionScript resource exposed to user
 	return condition is FunctionCondition
 
 func has_FunctionCondition():
