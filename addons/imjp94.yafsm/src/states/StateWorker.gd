@@ -1,11 +1,20 @@
 extends Node
 class_name State
 
-func enter(smp):
+var _smp = null
+
+func enter():
 	pass
 
-func update(smp):
+func update():
 	pass 
 
-func exit(smp):
+func exit():
 	pass
+
+
+func external(ref):
+	return self._smp.external(ref)
+
+func get_class(): 
+	return "StateWorker"
