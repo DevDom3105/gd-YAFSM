@@ -9,7 +9,6 @@ var condition_script
 func condition(plyr):
 	return funcref(condition_script, 'condition').call_func(plyr)
 
-#TODO: What is displayed? this needed?
-# Return human readable display string, for example, "condition_name == True"
+# Return human readable display string. For FunctionCondition just stick with name entered by user.
 func display_string():
 	return name
