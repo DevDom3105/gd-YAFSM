@@ -57,6 +57,7 @@ func _ready():
 	set_physics_process(false)
 	call_deferred("_initiate") # Make sure connection of signals can be done in _ready to receive all signal callback
 	_register_in_state_workers(self)
+	_register_in_funconds(state_machine)
 
 #func _register_in_state_workers(state_machine):
 #	for state in state_machine.states.keys():
@@ -72,15 +73,35 @@ func _ready():
 func _register_in_state_workers(node):
 	print('register: ', node.name)
 	for n in node.get_children():
-		#TODO identify node which inherits from stateworker by this member variable.
-		# Possible to check directly whether node is child class of StateWorker?
-		#if '_smp' in n:
 		if n.get_class() == 'StateWorker':
 			n._smp = self
 		elif n is Node:
 			_register_in_state_workers(n)
 		else:
 			print("Unexpected Node type under StateMachinePlayer ", n.get_class())
+
+func _register_in_state_machine_transitions(state_machine):
+	for from_transitions in state_machine.transitions.values():
+		for t in from_transitions.values():
+			if t.has_FunctionCondition():
+				t._fcond_resource._smp = self
+				print("Registered SMP in transition ", t.from, t.to)
+
+
+func _register_in_funconds(state_machine):
+	for state in state_machine.states.keys():
+		var s = state_machine.states[state]
+		if s is StateMachine:
+			_register_in_state_machine_transitions(state_machine)
+			_register_in_funconds(s)
+
+	var has_function_condition = false
+	if get_current() in state_machine.transitions.keys():
+		var from_transitions = state_machine.transitions.get(get_current())
+		for t in from_transitions.values():
+			if t.has_FunctionCondition():
+				has_function_condition = true
+				break
 
 
 func _initiate():
@@ -127,8 +148,7 @@ func _transit():
 	
 	var from = get_current()
 	var local_params = _local_parameters.get(path_backward(from), {})
-	#TODO: if implement 'get_extern()' still needed to pass self? var next_state = state_machine.transit(get_current(), _parameters, local_params)
-	var next_state = state_machine.transit(get_current(), _parameters, local_params, self)
+	var next_state = state_machine.transit(get_current(), _parameters, local_params)
 	if next_state:
 		if stack.has(next_state):
 			reset(stack.find(next_state))

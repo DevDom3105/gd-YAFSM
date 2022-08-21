@@ -53,7 +53,7 @@ func transit(current_state, params={}, local_params={}, state_machine_player_ref
 		from_transitions_array.sort_custom(Transition, "sort")
 		
 		for transition in from_transitions_array:
-			var next_state = transition.transit(params, local_params, state_machine_player_ref)
+			var next_state = transition.transit(params, local_params)
 			if next_state:
 				if "states" in end_state_machine.states[next_state]:
 					# Next state is a StateMachine, return entry state of the state machine in absolute path

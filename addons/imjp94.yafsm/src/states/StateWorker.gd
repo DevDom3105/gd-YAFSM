@@ -1,5 +1,5 @@
 extends Node
-class_name State
+class_name StateWorker
 
 var _smp = null
 
@@ -16,5 +16,7 @@ func exit():
 func external(ref):
 	return self._smp.external(ref)
 
-func get_class(): 
+func get_class():
+	# Used by statemachine player to identify a node as StateWorker, 
+	# so do not overwrite this function in inheriting classes
 	return "StateWorker"

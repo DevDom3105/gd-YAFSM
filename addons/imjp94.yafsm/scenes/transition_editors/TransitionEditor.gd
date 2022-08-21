@@ -12,7 +12,7 @@ const BoolConditionEditor = preload("../condition_editors/BoolConditionEditor.ts
 const IntegerConditionEditor = preload("../condition_editors/IntegerConditionEditor.tscn")
 const FloatConditionEditor = preload("../condition_editors/FloatConditionEditor.tscn")
 const StringConditionEditor = preload("../condition_editors/StringConditionEditor.tscn")
-const FunctionCondition = preload("../../src/conditions/FunctionCondition.gd")
+const FunctionConditionTrigger = preload("../../src/conditions/FunctionConditionTrigger.gd")
 const FunctionConditionEditor = preload("../condition_editors/FunctionConditionEditor.tscn")
 
 onready var header = $HeaderContainer/Header
@@ -34,14 +34,6 @@ var undo_redo
 var transition setget set_transition
 
 var _to_free
-
-
-
-
-export(Resource) onready var FunctionConditionRes = null
-
-
-
 
 func _init():
 	_to_free = []
@@ -82,11 +74,11 @@ func _on_add_popup_menu_index_pressed(index):
 		4: # String
 			condition = StringCondition.new()
 		5: # Function
-			condition = FunctionCondition.new()
+			condition = FunctionConditionTrigger.new()
 		_:
 			push_error("Unexpected index(%d) from PopupMenu" % index)
 	var editor = create_condition_editor(condition)
-	condition.name = transition.get_unique_name("Funcond" if condition is FunctionCondition else "Param")
+	condition.name = transition.get_unique_name("Funcond" if condition is FunctionConditionTrigger else "Param")
 	add_condition_editor_action(editor, condition)
 
 func _on_ConditionEditorRemove_pressed(editor):
@@ -159,7 +151,7 @@ func create_condition_editor(condition):
 		editor = FloatConditionEditor.instance()
 	elif condition is StringCondition:
 		editor = StringConditionEditor.instance()
-	elif condition is FunctionCondition:
+	elif condition is FunctionConditionTrigger:
 		editor = FunctionConditionEditor.instance()
 	else:
 		editor = ConditionEditor.instance()

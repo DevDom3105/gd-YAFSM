@@ -9,25 +9,25 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "State",
+"base": "StateWorker",
 "class": "CustomState",
 "language": "GDScript",
 "path": "res://CustomState.gd"
 }, {
-"base": "",
+"base": "Resource",
 "class": "FunctionCondition",
 "language": "GDScript",
 "path": "res://addons/imjp94.yafsm/src/conditions/FunctionCondition.gd"
 }, {
 "base": "Node",
-"class": "State",
+"class": "StateWorker",
 "language": "GDScript",
 "path": "res://addons/imjp94.yafsm/src/states/StateWorker.gd"
 } ]
 _global_script_class_icons={
 "CustomState": "",
 "FunctionCondition": "",
-"State": ""
+"StateWorker": ""
 }
 
 [application]

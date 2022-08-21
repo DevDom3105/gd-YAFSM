@@ -14,7 +14,7 @@ export(int) var priority = 0 # Higher the number, higher the priority
 export(Resource) var FCond_Resource setget _set_fcond_res
 onready var _fcond_resource = null
 
-const FunctionCondition = preload('../conditions/FunctionCondition.gd')
+const FunctionConditionTrigger = preload('../conditions/FunctionConditionTrigger.gd')
 
 
 func _init(p_from="", p_to="", p_conditions={}):
@@ -23,7 +23,7 @@ func _init(p_from="", p_to="", p_conditions={}):
 	conditions = p_conditions
 
 # Attempt to transit with parameters given, return name of next state if succeeded else null
-func transit(params={}, local_params={}, state_machine_player_ref=null):
+func transit(params={}, local_params={}):
 	var can_transit = conditions.size() > 0
 	
 	for condition in conditions.values():
@@ -34,14 +34,12 @@ func transit(params={}, local_params={}, state_machine_player_ref=null):
 			var value = local_params.get(condition.name) if has_local_param else params.get(condition.name)
 			if value == null: # null value is treated as trigger
 				can_transit = can_transit and true
+			elif "value" in condition:
+				can_transit = can_transit and condition.compare(value)
 			else:
-				if "value" in condition:
-					can_transit = can_transit and condition.compare(value)
-				else:
-					#TODO: Proper case handling
-					print('Invalid condition encountered in transition ', condition.name)
+				print('Invalid condition encountered in transition ', condition.name)
 		elif _is_FunctionCondition(condition):
-			can_transit = can_transit and funcref(_fcond_resource, 'condition').call_func(state_machine_player_ref)
+			can_transit = can_transit and funcref(_fcond_resource, 'condition').call_func()
 		else:
 			can_transit = false
 	
@@ -60,7 +58,8 @@ func _set_fcond_res(val):
 
 func _is_FunctionCondition(condition):
 	# Find way so FunctionCondition class is not exposed to user. Instead make FunctionConditionScript resource exposed to user
-	return condition is FunctionCondition
+	#return condition is FunctionConditionTrigger
+	return condition.get_class() == 'FunctionConditionTrigger'
 
 func has_FunctionCondition():
 	for c in conditions.values():
