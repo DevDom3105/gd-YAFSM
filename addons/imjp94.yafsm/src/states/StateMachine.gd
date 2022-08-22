@@ -16,7 +16,7 @@ func _init(p_name="", p_transitions={}, p_states={}):
 	states = p_states
 
 # Attempt to transit with global/local parameters, where local_params override params
-func transit(current_state, params={}, local_params={}, state_machine_player_ref=null):
+func transit(current_state, params={}, local_params={}):
 	var nested_states = current_state.split("/")
 	var is_nested = nested_states.size() > 1
 	var end_state_machine = self

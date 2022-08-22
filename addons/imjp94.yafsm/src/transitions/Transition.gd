@@ -54,8 +54,6 @@ func _set_fcond_res(val):
 	else:
 		_fcond_resource = null
 
-
-
 func _is_FunctionCondition(condition):
 	# Find way so FunctionCondition class is not exposed to user. Instead make FunctionConditionScript resource exposed to user
 	#return condition is FunctionConditionTrigger
@@ -67,12 +65,10 @@ func has_FunctionCondition():
 			return true
 	return false
 
-#TODO: Warn user when FunctionContition added, but no fcresource present?
 # Add condition, return true if succeeded
 func add_condition(condition):
 	if condition.name in conditions:
 		return false
-
 	conditions[condition.name] = condition
 	emit_signal("condition_added", condition)
 	return true

@@ -126,25 +126,29 @@ func _physics_process(delta):
 	update(delta)
 	_update_end()
 
-# Only get called in 2 condition, _parameters edited or last transition was successful
+# Only get called in 3 conditions: _parameters edited, last transition was successful, or current
+# state has transition with a FuncitonCondition
 func _transit():
 	if not active:
 		return
 	# Attempt to transit if parameter edited, last transition was successful, or when current state has a FunctionCondition
 	var has_function_condition = false
-	if get_current() in state_machine.transitions.keys():
-		var from_transitions = state_machine.transitions.get(get_current())
+	var state_path = get_current()
+	var nested_states = state_path.split("/")
+	var is_nested = nested_states.size() > 1
+	var is_nested_exit = nested_states[nested_states.size()-1] == State.EXIT_STATE
+	if is_nested and is_nested_exit:
+		state_path = path_backward(state_path)
+	var nested_state_machine = _get_nested_state_machine(state_path)
+	var nested_state = path_end_dir(state_path)
+	if nested_state in nested_state_machine.transitions.keys():
+		var from_transitions = nested_state_machine.transitions.get(nested_state)
 		for t in from_transitions.values():
 			if t.has_FunctionCondition():
 				has_function_condition = true
 				break
-	
-	#TODO: to debug nested case, check for transition every frame
-	has_function_condition = true
-	
 	if (not _is_param_edited and not _was_transited) and not has_function_condition:
 		return
-	
 	
 	var from = get_current()
 	var local_params = _local_parameters.get(path_backward(from), {})
@@ -423,6 +427,30 @@ func get_current():
 func get_previous():
 	var v = .get_previous()
 	return v if v else ""
+
+static func join_path(base, dirs):
+	var path = base
+	for dir in dirs:
+		if path.empty():
+			path = dir
+		else:
+			path = str(path, "/", dir)
+	return path
+
+func _get_nested_state_machine(state_path):
+	var nested_states = state_path.split("/")
+	var is_nested = nested_states.size() > 1
+	var end_state_machine = state_machine
+	var base_path = ""
+	for i in nested_states.size() - 1: # Ignore last one, to get its parent StateMachine
+		var state = nested_states[i]
+		# Construct absolute base path
+		base_path = join_path(base_path, [state])
+		if end_state_machine != state_machine:
+			end_state_machine = end_state_machine.states[state]
+		else:
+			end_state_machine = state_machine.states[state] # First level state
+	return end_state_machine
 
 # Convert node path to state path that can be used to query state with StateMachine.get_state.
 # Node path, "root/path/to/state", equals to State path, "path/to/state"
