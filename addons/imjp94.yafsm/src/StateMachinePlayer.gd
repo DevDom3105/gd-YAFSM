@@ -59,17 +59,6 @@ func _ready():
 	_register_in_state_workers(self)
 	_register_in_funconds(state_machine)
 
-#func _register_in_state_workers(state_machine):
-#	for state in state_machine.states.keys():
-#		var s = state_machine.states[state]
-#		if s is StateMachine:
-#			_register_in_state_workers(s)
-#		else:
-#			 get_state_node(
-#		elif s.state != null:
-#			s.state = s.state.new()
-#			print("instanciated StateWorker for ", s.name)
-
 func _register_in_state_workers(node):
 	print('register: ', node.name)
 	for n in node.get_children():
@@ -187,9 +176,9 @@ func _on_state_changed(from, to):
 	var from_worker = get_state_node(from)
 	var to_worker = get_state_node(to)
 	if from_worker != null:
-		from_worker.exit()#self)
+		from_worker.exit()
 	if to_worker != null:
-		to_worker.enter()#self)
+		to_worker.enter()
 	print("StateMachinePlayer: transit ", from, " -> ", to)
 	emit_signal("transited", from, to)
 
@@ -290,7 +279,7 @@ func update(delta=get_physics_process_delta_time()):
 			call_deferred("update")
 	var state_worker = get_state_node(current_state)
 	if state_worker != null:
-		state_worker.update()#self)
+		state_worker.update()
 
 # Set trigger to be tested with condition, then trigger _transit on next update, 
 # automatically call update() if process_mode set to MANUAL and auto_update true

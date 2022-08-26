@@ -18,5 +18,5 @@ func external(ref):
 
 func get_class():
 	# Used by statemachine player to identify a node as StateWorker, 
-	# so do not overwrite this function in inheriting classes
+	# so do not override this function in inheriting classes
 	return "StateWorker"

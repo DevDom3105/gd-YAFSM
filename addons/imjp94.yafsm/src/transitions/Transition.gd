@@ -55,8 +55,6 @@ func _set_fcond_res(val):
 		_fcond_resource = null
 
 func _is_FunctionCondition(condition):
-	# Find way so FunctionCondition class is not exposed to user. Instead make FunctionConditionScript resource exposed to user
-	#return condition is FunctionConditionTrigger
 	return condition.get_class() == 'FunctionConditionTrigger'
 
 func has_FunctionCondition():
