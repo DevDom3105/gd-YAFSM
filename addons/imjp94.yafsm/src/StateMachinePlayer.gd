@@ -57,7 +57,7 @@ func _ready():
 	set_physics_process(false)
 	call_deferred("_initiate") # Make sure connection of signals can be done in _ready to receive all signal callback
 	_register_in_state_workers(self)
-	_register_in_funconds(state_machine)
+	_register_in_funconds_nested(state_machine)
 
 func _register_in_state_workers(node):
 	print('register: ', node.name)
@@ -69,29 +69,19 @@ func _register_in_state_workers(node):
 		else:
 			print("Unexpected Node type under StateMachinePlayer ", n.get_class())
 
-func _register_in_state_machine_transitions(state_machine):
+func _register_in_funconds_nested(state_machine):
+	_register_in_funconds(state_machine)
+	for s in state_machine.states.values():
+		if s is StateMachine:
+			_register_in_funconds_nested(s)
+
+
+func _register_in_funconds(state_machine):
 	for from_transitions in state_machine.transitions.values():
 		for t in from_transitions.values():
 			if t.has_FunctionCondition():
 				t._fcond_resource._smp = self
 				print("Registered SMP in transition ", t.from, t.to)
-
-
-func _register_in_funconds(state_machine):
-	for state in state_machine.states.keys():
-		var s = state_machine.states[state]
-		if s is StateMachine:
-			_register_in_state_machine_transitions(state_machine)
-			_register_in_funconds(s)
-
-	var has_function_condition = false
-	if get_current() in state_machine.transitions.keys():
-		var from_transitions = state_machine.transitions.get(get_current())
-		for t in from_transitions.values():
-			if t.has_FunctionCondition():
-				has_function_condition = true
-				break
-
 
 func _initiate():
 	if autostart:
