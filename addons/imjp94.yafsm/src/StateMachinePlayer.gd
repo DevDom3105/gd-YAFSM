@@ -24,13 +24,15 @@ export(ProcessMode) var process_mode = ProcessMode.IDLE setget set_process_mode 
 export(Dictionary) var externals = {}
 
 
-
 var _is_started = false
 var _parameters # Parameters to be passed to condition
 var _local_parameters
 var _is_update_locked = true
 var _was_transited = false # If last transition was successful
 var _is_param_edited = false
+
+
+var _global_states = []
 
 
 func _init():
@@ -69,19 +71,24 @@ func _register_in_state_workers(node):
 		else:
 			print("Unexpected Node type under StateMachinePlayer ", n.get_class())
 
-func _register_in_funconds_nested(state_machine):
-	_register_in_funconds(state_machine)
+func _register_in_funconds_nested(state_machine, state_machine_path='root'):
+	_register_in_funconds(state_machine, state_machine_path)
 	for s in state_machine.states.values():
 		if s is StateMachine:
-			_register_in_funconds_nested(s)
+			_register_in_funconds_nested(s, state_machine_path+'/'+s.name)
 
 
-func _register_in_funconds(state_machine):
+func _register_in_funconds(state_machine, state_machine_path):
 	for from_transitions in state_machine.transitions.values():
 		for t in from_transitions.values():
 			if t.has_FunctionCondition():
 				t._fcond_resource._smp = self
 				print("Registered SMP in transition ", t.from, t.to)
+	for state in state_machine.states.values():
+		if state.Global_FCond_Resource != null:
+			print('Registered GLOBAL state ', state_machine_path + '/'+state.name)
+			state._global_fcond_resource._smp = self
+			_global_states.append(state_machine_path + '/'+state.name)
 
 func _initiate():
 	if autostart:
@@ -107,7 +114,8 @@ func _physics_process(delta):
 
 # Only get called in 3 conditions: _parameters edited, last transition was successful, or current
 # state has transition with a FuncitonCondition
-func _transit():
+# TODO: above statement '3 conditions' outdated since called in 'update()'?
+func _transit(global_transits=true):
 	if not active:
 		return
 	# Attempt to transit if parameter edited, last transition was successful, or when current state has a FunctionCondition
@@ -126,12 +134,28 @@ func _transit():
 			if t.has_FunctionCondition():
 				has_function_condition = true
 				break
-	if (not _is_param_edited and not _was_transited) and not has_function_condition:
+	if (not _is_param_edited and not _was_transited) and not has_function_condition and len(_global_states)==0:
 		return
 	
 	var from = get_current()
 	var local_params = _local_parameters.get(path_backward(from), {})
-	var next_state = state_machine.transit(get_current(), _parameters, local_params)
+	var next_state = null
+	# check for global transition
+	if global_transits:
+		for gstate_path in _global_states:
+			# TODO: Make get_nested_state function like get_nested_state_machine
+			gstate_path = node_path_to_state_path(gstate_path)
+			var gstate_name = path_end_dir(gstate_path)
+			var gstate = _get_nested_state_machine(gstate_path).states[gstate_name]
+			if gstate._global_fcond_resource.condition() and get_current() != gstate_path:
+				next_state = gstate_path
+				break
+	
+	# local transition gets priority by overwriting next_state
+	var local_next_state = state_machine.transit(get_current(), _parameters, local_params)
+	if local_next_state:
+		next_state = local_next_state
+	
 	if next_state:
 		if stack.has(next_state):
 			reset(stack.find(next_state))
@@ -253,20 +277,22 @@ func external(name):
 # Update player to, first initiate transition, then call _on_updated, finally emit "update" signal, delta will be given based on process_mode.
 # Can only be called manually if process_mode is MANUAL, otherwise, assertion error will be raised.
 # *delta provided will be reflected in signal updated(state, delta)
-func update(delta=get_physics_process_delta_time()):
+func update(delta=get_physics_process_delta_time(), global_transits=true):
 	if not active:
 		return
 	if process_mode != ProcessMode.MANUAL:
 		assert(not _is_update_locked, "Attempting to update manually with ProcessMode.%s" % ProcessMode.keys()[process_mode])
 
-	_transit()
+	_transit(global_transits)
 	var current_state = get_current()
 	_on_updated(current_state, delta)
 	emit_signal("updated", current_state, delta)
 	if process_mode == ProcessMode.MANUAL:
 		# Make sure to auto advance even in MANUAL mode
 		if _was_transited:
-			call_deferred("update")
+			#TODO: Auto advance runs here for MANUAL ProcessMODE, but does it also work for other modes?
+			# I assume Auto advance means here that in one frame multiple states are transited
+			call_deferred("update", "global_transits", false)
 	var state_worker = get_state_node(current_state)
 	if state_worker != null:
 		state_worker.update()
