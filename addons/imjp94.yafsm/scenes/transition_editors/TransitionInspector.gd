@@ -25,7 +25,9 @@ func parse_property(object, type, path, hint, hint_text, usage):
 			return true
 		"priority":
 			return true
-	return false
+		"function_condition":
+			return false
+	return true
 
 func _on_transition_editor_tree_entered(editor, transition):
 	editor.transition = transition

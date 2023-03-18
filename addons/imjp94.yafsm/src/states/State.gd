@@ -46,3 +46,6 @@ func is_global():
 	if _global_fcond_resource != null:
 		return true
 	return false
+
+func get_class():
+	return 'State'

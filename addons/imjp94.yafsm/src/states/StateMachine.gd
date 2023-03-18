@@ -215,3 +215,6 @@ static func validate(state_machine):
 				push_warning("gd-YAFSM ValidationError: Self connecting transition(%s -> %s)" % [to_transition.from, to_transition.to])
 				from_transition.erase(to_key)
 	return validated
+
+func get_class():
+	return 'StateMachine'

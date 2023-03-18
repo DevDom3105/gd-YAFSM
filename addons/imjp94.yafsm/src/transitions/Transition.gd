@@ -11,7 +11,7 @@ export(Dictionary) var conditions setget ,get_conditions # Conditions to transit
 export(int) var priority = 0 # Higher the number, higher the priority
 
 
-export(Resource) var FCond_Resource setget _set_fcond_res
+export(Resource) var function_condition setget _set_fcond_res
 onready var _fcond_resource = null
 
 const FunctionConditionTrigger = preload('../conditions/FunctionConditionTrigger.gd')
@@ -48,7 +48,7 @@ func transit(params={}, local_params={}):
 	return null
 
 func _set_fcond_res(val):
-	FCond_Resource = val
+	function_condition = val
 	if val != null:
 		_fcond_resource = val.new()
 	else:

@@ -9,6 +9,7 @@ const State = YAFSM.State
 const StateMachineEditor = preload("scenes/StateMachineEditor.tscn")
 const TransitionInspector = preload("scenes/transition_editors/TransitionInspector.gd")
 const StateInspector = preload("scenes/state_nodes/StateInspector.gd")
+const StateMachineInspector = preload("scenes/StateMachineInspector.gd")
 
 const StackPlayerIcon = preload("assets/icons/stack_player_icon.png")
 const StateMachinePlayerIcon = preload("assets/icons/state_machine_player_icon.png")
@@ -17,6 +18,7 @@ const StateMachineIcon = preload("assets/icons/state_machine_icon.png")
 var state_machine_editor = StateMachineEditor.instance()
 var transition_inspector = TransitionInspector.new()
 var state_inspector = StateInspector.new()
+var state_machine_inspector = StateMachineInspector.new()
 
 var focused_object setget set_focused_object # Can be StateMachine/StateMachinePlayer
 var editor_selection
@@ -53,6 +55,7 @@ func _enter_tree():
 	transition_inspector.transition_icon = editor_base_control.get_icon("ToolConnect", "EditorIcons")
 	add_inspector_plugin(transition_inspector)
 	add_inspector_plugin(state_inspector)
+	add_inspector_plugin(state_machine_inspector)
 
 func _exit_tree():
 	if state_machine_editor:
