@@ -27,6 +27,11 @@ func _draw():
 			draw_style_box(get_stylebox("nested_focus", "StateNode"), Rect2(Vector2.ZERO, rect_size))
 		else:
 			draw_style_box(get_stylebox("nested_normal", "StateNode"), Rect2(Vector2.ZERO, rect_size))
+	elif state.is_global():
+		if selected:
+			draw_style_box(get_stylebox("global_focus", "StateNode"), Rect2(Vector2.ZERO, rect_size))
+		else:
+			draw_style_box(get_stylebox("global_normal", "StateNode"), Rect2(Vector2.ZERO, rect_size))
 	else:
 		._draw()
 

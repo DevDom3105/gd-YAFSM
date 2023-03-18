@@ -1,8 +1,6 @@
 tool
 extends "StackPlayer.gd"
 const State = preload("states/State.gd")
-
-
 const StateMachine = preload("states/StateMachine.gd")
 
 signal transited(from, to) # Transition of state
@@ -23,15 +21,12 @@ export(bool) var autostart = true # Automatically enter Entry state on ready if 
 export(ProcessMode) var process_mode = ProcessMode.IDLE setget set_process_mode # ProcessMode of player
 export(Dictionary) var externals = {}
 
-
 var _is_started = false
 var _parameters # Parameters to be passed to condition
 var _local_parameters
 var _is_update_locked = true
 var _was_transited = false # If last transition was successful
 var _is_param_edited = false
-
-
 var _global_states = []
 
 
@@ -62,7 +57,6 @@ func _ready():
 	_register_in_funconds_nested(state_machine)
 
 func _register_in_state_workers(node):
-	print('register: ', node.name)
 	for n in node.get_children():
 		if n.get_class() == 'StateWorker':
 			n._smp = self
@@ -112,9 +106,8 @@ func _physics_process(delta):
 	update(delta)
 	_update_end()
 
-# Only get called in 3 conditions: _parameters edited, last transition was successful, or current
-# state has transition with a FuncitonCondition
-# TODO: above statement '3 conditions' outdated since called in 'update()'?
+# Only get called in 4 conditions: _parameters edited, last transition was successful, current
+# state has transition with a FuncitonCondition, or global state exists
 func _transit(global_transits=true):
 	if not active:
 		return
@@ -187,17 +180,14 @@ func _on_state_changed(from, to):
 		var state = path_backward(get_current())
 		clear_param(state, false) # Clearing params internally, do not update
 		emit_signal("exited", state)
-	var from_worker = get_state_node(from)
-	var to_worker = get_state_node(to)
+	var from_worker = get_state_worker(from)
+	var to_worker = get_state_worker(to)
 	if from_worker != null:
 		from_worker.exit()
 	if to_worker != null:
 		to_worker.enter()
-	print("StateMachinePlayer: transit ", from, " -> ", to)
+	#print(Engine.get_frames_drawn(), " StateMachinePlayer: transit ", from, " -> ", to)
 	emit_signal("transited", from, to)
-
-func get_state_node(state_path):
-	return get_node_or_null(state_path)
 
 # Called internally if process_mode is PHYSICS/IDLE to unlock update()
 func _update_start():
@@ -266,7 +256,6 @@ func restart(is_active=true, preserve_params=false):
 		clear_param("", false)
 	start()
 
-
 func external(name):
 	if not name in externals.keys():
 		printerr('StateMachine does not have entry for extern name ', name)
@@ -290,11 +279,10 @@ func update(delta=get_physics_process_delta_time(), global_transits=true):
 	if process_mode == ProcessMode.MANUAL:
 		# Make sure to auto advance even in MANUAL mode
 		if _was_transited:
-			#TODO: Auto advance runs here for MANUAL ProcessMODE, but does it also work for other modes?
-			# I assume Auto advance means here that in one frame multiple states are transited
 			call_deferred("update", "global_transits", false)
-	var state_worker = get_state_node(current_state)
+	var state_worker = get_state_worker(current_state)
 	if state_worker != null:
+		#print(Engine.get_frames_drawn(), ' State worker update from SMP')
 		state_worker.update()
 
 # Set trigger to be tested with condition, then trigger _transit on next update, 
@@ -482,3 +470,10 @@ static func path_backward(path):
 # Return end directory of path, "path/to/state" returns "state"
 static func path_end_dir(path):
 	return path.right(path.rfind("/") + 1)
+
+func get_state_worker(state_path):
+	return get_node_or_null(state_path)
+
+func get_current_state_worker():
+	return get_state_worker(get_current())
+

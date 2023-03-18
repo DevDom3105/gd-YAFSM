@@ -41,3 +41,8 @@ func set_name(n):
 	if name != n:
 		name = n
 		emit_signal("name_changed", name)
+
+func is_global():
+	if _global_fcond_resource != null:
+		return true
+	return false

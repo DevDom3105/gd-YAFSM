@@ -7,10 +7,10 @@ func external(val):
 	return _smp.external(val)
 
 func get_current_state():
-	return _smp.get_state_node(_smp.get_current())
+	return _smp.get_state_worker(_smp.get_current())
 
 func get_previous_state():
-	return _smp.get_state_node(_smp.get_previous())
+	return _smp.get_state_worker(_smp.get_previous())
 
 func condition():
 	# User defined FunctionConditions inheriting from this class need to overwrite this function.
