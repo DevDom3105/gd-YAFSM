@@ -77,10 +77,10 @@ func _register_in_funconds(state_machine, state_machine_path):
 		for t in from_transitions.values():
 			if t.has_FunctionCondition():
 				t._fcond_resource._smp = self
-				print("Registered SMP in transition ", t.from, t.to)
+				#print("Registered SMP in transition ", t.from, t.to)
 	for state in state_machine.states.values():
-		if state.Global_FCond_Resource != null:
-			print('Registered GLOBAL state ', state_machine_path + '/'+state.name)
+		if state._global_fcond_resource != null:
+			#print('Registered GLOBAL state ', state_machine_path + '/'+state.name)
 			state._global_fcond_resource._smp = self
 			_global_states.append(state_machine_path + '/'+state.name)
 

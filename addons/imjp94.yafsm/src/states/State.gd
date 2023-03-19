@@ -10,13 +10,13 @@ const EXIT_STATE = "Exit"
 const META_GRAPH_OFFSET = "graph_offset" # Meta key for graph_offset
 
 export(String) var name = "" setget set_name # Name of state, unique within StateMachine
-export(Resource) var Global_FCond_Resource setget _set_global_fcond_res
+export(Resource) var Global_Function_Condition setget _set_global_fcond_res
 onready var _global_fcond_resource = null
 
 var graph_offset setget set_graph_offset, get_graph_offset # Position in FlowChart stored as meta, for editor only
 
 func _set_global_fcond_res(val):
-	Global_FCond_Resource = val
+	Global_Function_Condition = val
 	if val != null:
 		_global_fcond_resource = val.new()
 	else:
