@@ -1,8 +1,12 @@
 # ![gd-YAFSM icon](icon.png)gd-YAFSM (**g**o**d**ot-**Y**et **A**nother **F**inite **S**tate **M**achine)
 
-Designer-friendly Finite State Machine implemented in "Godotic" way
+Designer-friendly Finite State Machine implemented in "Godotic" way. 
+⚠️ **Note**
+
+> This is a fork of from the original implementation [gd-YAFSM](https://github.com/imjp94/gd-YAFSM). I extend this plugin by with features which I use in practice when working on my personal game project. Have a look at the [New Fetures](#New Features) section below for an introduction.
 
 ⚠️ **Warning**
+
 > It is not recommended to be used in production yet, as api might be changed before v1.0.
 > Testing & reporting bugs are greatly appreciated.
 
@@ -16,6 +20,10 @@ Designer-friendly Finite State Machine implemented in "Godotic" way
 - [Nested FSM](#nested-fsm)
   - [State](#state)
   - [Parameter](#parameter)
+- [New Fetures](#New Features)
+  - [StateWorker](#StateWorker)
+  - [Function Condition](#Function Condition)
+  - [Global State](#Global State)
 - [Debug](#debug)
 - [Demo](https://github.com/imjp94/gd-yafsm-demo)
 - [Documentation](addons/imjp94.yafsm/README.md)
@@ -23,24 +31,37 @@ Designer-friendly Finite State Machine implemented in "Godotic" way
 ## Feature
 
 - Designer-friendly
-
+  
   ![Editor Showcase](screenshots/yafsm_editor_showcase.gif)
+  
   > Design `StateMachine` in a flowchart-like editor
+
 - Remote Debug
-
+  
   ![Remote Debug Showcase](screenshots/yafsm_remote_debug_showcase.gif)
+  
   > Visualize flow of `StateMachine` & inspect parameters in realtime
-- Self-explanatory
 
+- Self-explanatory
+  
   ![Sample State Machine](screenshots/yafsm_sample_fsm.png)
+  
   > Visualize game/UI state from flowchart
+
 - Zero learning curve
+  
   > Similar workflow as using `AnimationTree`, and not required to inherit any custom class, just plug and play
+
 - Nested FSM
+  
   > Nested Finite State Machine workflow supported to create complex state machine with ease
+
 - Reusability
+  
   > As a `Resource`, `StateMachine` can be used repeatedly in different scenarios(`StateMachinePlayer`) and provide different outcome based on the input.
+
 - Minimal
+  
   > Compact data structure for `StateMachine` resource file
 
 For more detail, see [CHANGELOG.md](CHANGELOG.md)
@@ -121,27 +142,27 @@ const StateDirectory = preload("addons/imjp94.yafsm/src/StateDirectory.gd")
 
 # Handle "transited" signal
 func _on_normal_state_transited(from, to):
-	match to:
-		"Entry":
-			print("Enter")
-		"Game":
-			print("Game")
-		"Exit":
-			print("Exit")
+    match to:
+        "Entry":
+            print("Enter")
+        "Game":
+            print("Game")
+        "Exit":
+            print("Exit")
 
 # Handle "transited" signal
 func _on_nested_state_transited(from, to):
-	var to_dir = StateDirectory.new(to)
+    var to_dir = StateDirectory.new(to)
 
-	match to_dir.next(): # Initial next() required to move to base state
-		"Entry":
-			print("Enter")
-		"Game":
-			match to_dir.next(): # It can be called recursively, until return null
-				"Entry":
-					print("Game Enter") # Game/Entry
-		"Exit":
-			print("Exit")
+    match to_dir.next(): # Initial next() required to move to base state
+        "Entry":
+            print("Enter")
+        "Game":
+            match to_dir.next(): # It can be called recursively, until return null
+                "Entry":
+                    print("Game Enter") # Game/Entry
+        "Exit":
+            print("Exit")
 ```
 
 ### Parameter
@@ -175,10 +196,31 @@ var game_scn = smp.get_param("game")
 ### Debug
 
 - Editor
-  > When playing scene, select `StateMachinePlayer` node in remote scene tree to view flow of `StateMachine` in realtime
-- In-game
-  > Add `res://addons/imjp94.yafsm/src/debugger/StackPlayerDebugger.tscn` to `StackPlayer`(so as `StateMachinePlayer`) to visualize the stack on screen.
   
+  > When playing scene, select `StateMachinePlayer` node in remote scene tree to view flow of `StateMachine` in realtime
+
+- In-game
+  
+  > Add `res://addons/imjp94.yafsm/src/debugger/StackPlayerDebugger.tscn` to `StackPlayer`(so as `StateMachinePlayer`) to visualize the stack on screen.
+
+## New Features
+
+### StateWorker
+
+Each StateWorker node corresponds to a state and allows to manipulate the scene while this state is the active one. For example, you can choose the currently played animation of a character, define how player input is handled, etc. This way of implementing state dependent changes to the scene allows to cleanly organize and modualarize code instead of writing endless if-else spagehetti code for all states.
+
+StateWorker nodes are placed under the StateMachinePlayer node in the scene tree in the same hirarchical structure as the states they correpond to. In an attached script, you can override the enter(), update(), and exit() functions, to implement what happens when the state is entered, running, or exited.
+
+With the external() function you can get the reference to a node in the scene which you want to manipulate. You have to define in the StateMachinePlayer which nodes can be accessed via a string name as argument to the external() function.
+
+### Function Condition
+
+A scripts inheriting from FunctionCondition can be added to a transition in the StateMachineWorker interface to define arbitrary transition conditions. This is done by overriding the condition() function which is evaluated every frame and returns a boolean as feedback whether the condition is fulfilled. As in the StateWorker class, you can use the external() function to access external nodes needed to implement the condition.
+
+### Global State
+
+A global state can be transitioned to from any other state without them being connected via a transition line in the StateMachinePlayer interface. A state can be turned global by adding a FunctionCondition to it which defines the transition condition. Then the color of the state changes in the StateMachinePlayer interface
+
 ## Demo
 
 Check out [gd-YAFSM-demo](https://github.com/imjp94/gd-yafsm-demo) for how you can integrate gd-YAFSM into you project and manage app state with `StateMachine`
