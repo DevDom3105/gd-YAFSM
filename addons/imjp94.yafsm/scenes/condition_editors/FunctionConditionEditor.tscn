@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://ch3mf6p6d0uve"]
+
+[ext_resource type="PackedScene" uid="uid://cie8lb6ww58ck" path="res://addons/imjp94.yafsm/scenes/condition_editors/ConditionEditor.tscn" id="1"]
+
+[node name="FunctionConditionEditor" instance=ExtResource("1")]
+
+[node name="Name" parent="." index="0"]
+text = "Funcond"
+
+[node name="MarginContainer" type="MarginContainer" parent="." index="1"]
+layout_mode = 2

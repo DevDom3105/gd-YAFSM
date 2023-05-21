@@ -13,10 +13,20 @@ const META_GRAPH_OFFSET = "graph_offset" # Meta key for graph_offset
 @export var name: = "":  # Name of state, unique within StateMachine
 	set = set_name
 
+@export var Global_Function_Condition : Resource:
+	set = _set_global_fcond_res
+var _global_fcond_resource = null #TODO had @onready orignially, But this seems now in godot4 to be only possible for node subclasses...
+
 var graph_offset:  # Position in FlowChart stored as meta, for editor only
 	set = set_graph_offset, 
 	get = get_graph_offset
 
+func _set_global_fcond_res(val):
+	Global_Function_Condition = val
+	if val != null:
+		_global_fcond_resource = val.new()
+	else:
+		_global_fcond_resource = null
 
 func _init(p_name=""):
 	super._init()
@@ -38,3 +48,11 @@ func set_name(n):
 	if name != n:
 		name = n
 		emit_signal("name_changed", name)
+
+func is_global():
+	if _global_fcond_resource != null:
+		return true
+	return false
+
+func get_class():
+	return 'State'

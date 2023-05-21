@@ -15,6 +15,13 @@ signal condition_removed(condition)
 var _conditions
 
 
+@export var function_condition : Resource:
+	set = _set_fcond_res
+var _fcond_resource = null #TODO had onready here. Semms no longer possible in godot 4 where onready vars are only allowed when inheriting from node
+
+#const FunctionConditionTrigger = preload('../conditions/FunctionConditionTrigger.gd') TODO no longer needed?
+
+
 func _init(p_from="", p_to="", p_conditions={}):
 	super._init()
 	from = p_from
@@ -32,14 +39,34 @@ func transit(params={}, local_params={}):
 			var value = local_params.get(condition.name) if has_local_param else params.get(condition.name)
 			if value == null: # null value is treated as trigger
 				can_transit = can_transit and true
-			else:
-				if "value" in condition:
+			elif "value" in condition:
 					can_transit = can_transit and condition.compare(value)
+			else:
+				print('Invalid condition encountered in transition ', condition.name)
+		elif _is_FunctionCondition(condition):
+			#can_transit = can_transit and funcref(_fcond_resource, 'condition').call_func() #TODO: copy from godot3
+			can_transit = can_transit and _fcond_resource.condition()
 		else:
 			can_transit = false
 	if can_transit or _conditions.size() == 0:
 		return to
 	return null
+
+func _set_fcond_res(val):
+	function_condition = val
+	if val != null:
+		_fcond_resource = val.new()
+	else:
+		_fcond_resource = null
+
+func _is_FunctionCondition(condition):
+	return condition.get_class() == 'FunctionConditionTrigger'
+
+func has_FunctionCondition():
+	for c in conditions.values():
+		if _is_FunctionCondition(c):
+			return true
+	return false
 
 # Add condition, return true if succeeded
 func add_condition(condition):

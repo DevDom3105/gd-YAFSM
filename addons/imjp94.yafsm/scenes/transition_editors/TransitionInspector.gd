@@ -25,6 +25,9 @@ func _parse_property(object, type, path, hint, hint_text, usage, wide) -> bool:
 			return true
 		"priority":
 			return true
+		"function_condition":
+			return false
+	#return true TODO why do I return tru here before
 	return false
 
 func _on_transition_editor_tree_entered(editor, transition):

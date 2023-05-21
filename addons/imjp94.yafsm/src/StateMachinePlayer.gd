@@ -19,6 +19,7 @@ enum UpdateProcessMode {
 @export var autostart: = true # Automatically enter Entry state on ready if true
 @export var update_process_mode: UpdateProcessMode = UpdateProcessMode.IDLE:  # ProcessMode of player
 	set = set_update_process_mode
+@export var externals: Dictionary = {}
 
 var _is_started = false
 var _parameters # Parameters to be passed to condition
@@ -26,6 +27,7 @@ var _local_parameters
 var _is_update_locked = true
 var _was_transited = false # If last transition was successful
 var _is_param_edited = false
+var _global_states = []
 
 
 func _init():
@@ -53,6 +55,36 @@ func _ready():
 	set_process(false)
 	set_physics_process(false)
 	call_deferred("_initiate") # Make sure connection of signals can be done in _ready to receive all signal callback
+	_register_in_state_workers(self)
+	_register_in_funconds_nested(state_machine)
+
+func _register_in_state_workers(node):
+	for n in node.get_children():
+		if n.get_class() == 'StateWorker':
+			n._smp = self
+		elif n is Node:
+			_register_in_state_workers(n)
+		else:
+			print("Unexpected Node type under StateMachinePlayer ", n.get_class())
+
+func _register_in_funconds_nested(state_machine, state_machine_path='root'):
+	_register_in_funconds(state_machine, state_machine_path)
+	for s in state_machine.states.values():
+		if s is StateMachine:
+			_register_in_funconds_nested(s, state_machine_path+'/'+s.name)
+
+
+func _register_in_funconds(state_machine, state_machine_path):
+	for from_transitions in state_machine.transitions.values():
+		for t in from_transitions.values():
+			if t.has_FunctionCondition():
+				t._fcond_resource._smp = self
+				#print("Registered SMP in transition ", t.from, t.to)
+	for state in state_machine.states.values():
+		if state._global_fcond_resource != null:
+			#print('Registered GLOBAL state ', state_machine_path + '/'+state.name)
+			state._global_fcond_resource._smp = self
+			_global_states.append(state_machine_path + '/'+state.name)
 
 func _initiate():
 	if autostart:
@@ -76,17 +108,50 @@ func _physics_process(delta):
 	update(delta)
 	_update_end()
 
-# Only get called in 2 condition, _parameters edited or last transition was successful
-func _transit():
+# Only get called in 4 conditions: _parameters edited, last transition was successful, current
+# state has transition with a FuncitonCondition, or global state exists
+func _transit(global_transits=true):
 	if not active:
 		return
-	# Attempt to transit if parameter edited or last transition was successful
-	if not _is_param_edited and not _was_transited:
+
+	# Attempt to transit if parameter edited, last transition was successful, or when current state has a FunctionCondition
+	var has_function_condition = false
+	var state_path = get_current()
+	var nested_states = state_path.split("/")
+	var is_nested = nested_states.size() > 1
+	var is_nested_exit = nested_states[nested_states.size()-1] == State.EXIT_STATE
+	if is_nested and is_nested_exit:
+		state_path = path_backward(state_path)
+	var nested_state_machine = _get_nested_state_machine(state_path)
+	var nested_state = path_end_dir(state_path)
+	if nested_state in nested_state_machine.transitions.keys():
+		var from_transitions = nested_state_machine.transitions.get(nested_state)
+		for t in from_transitions.values():
+			if t.has_FunctionCondition():
+				has_function_condition = true
+				break
+	if (not _is_param_edited and not _was_transited) and not has_function_condition and len(_global_states)==0:
 		return
 
 	var from = get_current()
 	var local_params = _local_parameters.get(path_backward(from), {})
-	var next_state = state_machine.transit(get_current(), _parameters, local_params)
+	var next_state = null
+	# check for global transition
+	if global_transits:
+		for gstate_path in _global_states:
+			# TODO: Make get_nested_state function like get_nested_state_machine
+			gstate_path = node_path_to_state_path(gstate_path)
+			var gstate_name = path_end_dir(gstate_path)
+			var gstate = _get_nested_state_machine(gstate_path).states[gstate_name]
+			if gstate._global_fcond_resource.condition() and get_current() != gstate_path:
+				next_state = gstate_path
+				break
+	
+	# local transition gets priority by overwriting next_state
+	var local_next_state = state_machine.transit(get_current(), _parameters, local_params)
+	if local_next_state:
+		next_state = local_next_state
+	
 	if next_state:
 		if stack.has(next_state):
 			reset(stack.find(next_state))
@@ -118,6 +183,14 @@ func _on_state_changed(from, to):
 		var state = path_backward(get_current())
 		clear_param(state, false) # Clearing params internally, do not update
 		emit_signal("exited", state)
+
+	var from_worker = get_state_worker(from)
+	var to_worker = get_state_worker(to)
+	if from_worker != null:
+		from_worker.exit()
+	if to_worker != null:
+		to_worker.enter()
+	#print(Engine.get_frames_drawn(), " StateMachinePlayer: transit ", from, " -> ", to) #TODO remove
 
 	emit_signal("transited", from, to)
 
@@ -188,23 +261,34 @@ func restart(is_active=true, preserve_params=false):
 		clear_param("", false)
 	start()
 
+func external(name):
+	if not name in externals.keys():
+		printerr('StateMachine does not have entry for extern name ', name)
+		return null
+	else:
+		return get_node(externals[name])
+
 # Update player to, first initiate transition, then call _on_updated, finally emit "update" signal, delta will be given based on process_mode.
 # Can only be called manually if process_mode is MANUAL, otherwise, assertion error will be raised.
 # *delta provided will be reflected in signal updated(state, delta)
-func update(delta=get_physics_process_delta_time()):
+func update(delta=get_physics_process_delta_time(), global_transits=true):
 	if not active:
 		return
 	if update_process_mode != UpdateProcessMode.MANUAL:
 		assert(not _is_update_locked, "Attempting to update manually with ProcessMode.")
 
-	_transit()
+	_transit(global_transits)
 	var current_state = get_current()
 	_on_updated(current_state, delta)
 	emit_signal("updated", current_state, delta)
 	if update_process_mode == UpdateProcessMode.MANUAL:
 		# Make sure to auto advance even in MANUAL mode
 		if _was_transited:
-			call_deferred("update")
+			call_deferred("update", "global_transits", false)
+	var state_worker = get_state_worker(current_state)
+	if state_worker != null:
+		#print(Engine.get_frames_drawn(), ' State worker update from SMP')
+		state_worker.update()
 
 # Set trigger to be tested with condition, then trigger _transit on next update, 
 # automatically call update() if process_mode set to MANUAL and auto_update true
@@ -342,6 +426,30 @@ func get_previous():
 	var v = super.get_previous()
 	return v if v else ""
 
+static func join_path(base, dirs):
+	var path = base
+	for dir in dirs:
+		if path.empty():
+			path = dir
+		else:
+			path = str(path, "/", dir)
+	return path
+
+func _get_nested_state_machine(state_path):
+	var nested_states = state_path.split("/")
+	var is_nested = nested_states.size() > 1
+	var end_state_machine = state_machine
+	var base_path = ""
+	for i in nested_states.size() - 1: # Ignore last one, to get its parent StateMachine
+		var state = nested_states[i]
+		# Construct absolute base path
+		base_path = join_path(base_path, [state])
+		if end_state_machine != state_machine:
+			end_state_machine = end_state_machine.states[state]
+		else:
+			end_state_machine = state_machine.states[state] # First level state
+	return end_state_machine
+
 # Convert node path to state path that can be used to query state with StateMachine.get_state.
 # Node path, "root/path/to/state", equals to State path, "path/to/state"
 static func node_path_to_state_path(node_path):
@@ -370,3 +478,9 @@ static func path_end_dir(path):
 	# a negative length. Check the docs:
 	# https://docs.godotengine.org/en/stable/classes/class_string.html#class-string-method-right
 	return path.right(-(path.rfind("/") + 1))
+
+func get_state_worker(state_path):
+	return get_node_or_null(state_path)
+
+func get_current_state_worker():
+	return get_state_worker(get_current())
