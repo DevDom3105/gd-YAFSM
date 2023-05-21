@@ -14,6 +14,10 @@ Designer-friendly Finite State Machine implemented in "Godotic" way
 - [Nested FSM](#nested-fsm)
   - [State](#state)
   - [Parameter](#parameter)
+- [New Fetures](#New Features)
+  - [StateWorker](#StateWorker)
+  - [Function Condition](#Function Condition)
+  - [Global State](#Global State)
 - [Debug](#debug)
 - [Demo](https://github.com/imjp94/gd-yafsm-demo)
 - [Documentation](addons/imjp94.yafsm/README.md)
@@ -185,6 +189,28 @@ var game_scn = smp.get_param("game")
 - In-game
   > Add `res://addons/imjp94.yafsm/src/debugger/StackPlayerDebugger.tscn` to `StackPlayer`(so as `StateMachinePlayer`) to visualize the stack on screen.
   
+
+
+## New Features
+
+### StateWorker
+
+Each StateWorker node corresponds to a state and allows to manipulate the scene while this state is the active one. For example, you can choose the currently played animation of a character, define how player input is handled, etc. This way of implementing state dependent changes to the scene allows to cleanly organize and modualarize code instead of writing endless if-else spagehetti code for all states.
+
+StateWorker nodes are placed under the StateMachinePlayer node in the scene tree in the same hirarchical structure as the states they correpond to. In an attached script, you can override the enter(), update(), and exit() functions, to implement what happens when the state is entered, running, or exited.
+
+With the external() function you can get the reference to a node in the scene which you want to manipulate. You have to define in the StateMachinePlayer which nodes can be accessed via a string name as argument to the external() function.
+
+### Function Condition
+
+A scripts inheriting from FunctionCondition can be added to a transition in the StateMachineWorker interface to define arbitrary transition conditions. This is done by overriding the condition() function which is evaluated every frame and returns a boolean as feedback whether the condition is fulfilled. As in the StateWorker class, you can use the external() function to access external nodes needed to implement the condition.
+
+### Global State
+
+A global state can be transitioned to from any other state without them being connected via a transition line in the StateMachinePlayer interface. A state can be turned global by adding a FunctionCondition to it which defines the transition condition. Then the color of the state changes in the StateMachinePlayer interface
+
+
+
 ## Demo
 
 Check out [gd-YAFSM-demo](https://github.com/imjp94/gd-yafsm-demo) for how you can integrate gd-YAFSM into you project and manage app state with `StateMachine`
