@@ -22,8 +22,8 @@
   - Rename StateMachinePlayer._*_param() functions to *_nested_param()
 - Features:
   - Support remote debug when select StateMachinePlayer node in remote SceneTree
-    - View live parameters with ParameterPanel
-    - Visualize flow of StateMachine
+	- View live parameters with ParameterPanel
+	- Visualize flow of StateMachine
 - Improves:
   - Add StateDirectory.goto()
   - Minimize size of StateNode name edit for ease of opening nested layer

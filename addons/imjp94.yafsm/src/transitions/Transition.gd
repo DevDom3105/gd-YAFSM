@@ -19,8 +19,6 @@ var _conditions
 	set = _set_fcond_res
 var _fcond_resource = null #TODO had onready here. Semms no longer possible in godot 4 where onready vars are only allowed when inheriting from node
 
-#const FunctionConditionTrigger = preload('../conditions/FunctionConditionTrigger.gd') TODO no longer needed?
-
 
 func _init(p_from="", p_to="", p_conditions={}):
 	super._init()
@@ -44,7 +42,6 @@ func transit(params={}, local_params={}):
 			else:
 				print('Invalid condition encountered in transition ', condition.name)
 		elif _is_FunctionCondition(condition):
-			#can_transit = can_transit and funcref(_fcond_resource, 'condition').call_func() #TODO: copy from godot3
 			can_transit = can_transit and _fcond_resource.condition()
 		else:
 			can_transit = false

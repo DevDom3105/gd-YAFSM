@@ -130,6 +130,7 @@ func _transit(global_transits=true):
 			if t.has_FunctionCondition():
 				has_function_condition = true
 				break
+	
 	if (not _is_param_edited and not _was_transited) and not has_function_condition and len(_global_states)==0:
 		return
 
@@ -190,7 +191,6 @@ func _on_state_changed(from, to):
 		from_worker.exit()
 	if to_worker != null:
 		to_worker.enter()
-	#print(Engine.get_frames_drawn(), " StateMachinePlayer: transit ", from, " -> ", to) #TODO remove
 
 	emit_signal("transited", from, to)
 
@@ -429,7 +429,7 @@ func get_previous():
 static func join_path(base, dirs):
 	var path = base
 	for dir in dirs:
-		if path.empty():
+		if path == null:#.empty():
 			path = dir
 		else:
 			path = str(path, "/", dir)
@@ -477,7 +477,10 @@ static func path_end_dir(path):
 	# In Godot 4.x the old behaviour of String.right() can be achieved with
 	# a negative length. Check the docs:
 	# https://docs.godotengine.org/en/stable/classes/class_string.html#class-string-method-right
-	return path.right(-(path.rfind("/") + 1))
+	var idx = path.rfind("/")
+	if idx == -1:
+		return path
+	return path.right(-(idx + 1))
 
 func get_state_worker(state_path):
 	return get_node_or_null(state_path)

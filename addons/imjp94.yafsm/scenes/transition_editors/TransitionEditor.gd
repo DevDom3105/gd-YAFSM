@@ -6,7 +6,6 @@ const BoolConditionEditor = preload("../condition_editors/BoolConditionEditor.ts
 const IntegerConditionEditor = preload("../condition_editors/IntegerConditionEditor.tscn")
 const FloatConditionEditor = preload("../condition_editors/FloatConditionEditor.tscn")
 const StringConditionEditor = preload("../condition_editors/StringConditionEditor.tscn")
-#const FunctionConditionTrigger = preload("../../src/conditions/FunctionConditionTrigger.gd") TODO seems no longer needed
 const FunctionConditionEditor = preload("../condition_editors/FunctionConditionEditor.tscn")
 
 @onready var header = $HeaderContainer/Header
@@ -158,7 +157,7 @@ func create_condition_editor(condition):
 	elif condition is StringCondition:
 		editor = StringConditionEditor.instantiate()
 	elif condition is FunctionConditionTrigger:
-		editor = FunctionConditionEditor.instance()
+		editor = FunctionConditionEditor.instantiate()
 	else:
 		editor = ConditionEditor.instantiate()
 	return editor

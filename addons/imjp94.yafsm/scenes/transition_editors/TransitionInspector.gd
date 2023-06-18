@@ -27,8 +27,7 @@ func _parse_property(object, type, path, hint, hint_text, usage, wide) -> bool:
 			return true
 		"function_condition":
 			return false
-	#return true TODO why do I return tru here before
-	return false
+	return true # switch off all other properties
 
 func _on_transition_editor_tree_entered(editor, transition):
 	editor.transition = transition
