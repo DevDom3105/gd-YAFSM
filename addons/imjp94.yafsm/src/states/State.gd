@@ -29,7 +29,6 @@ func _set_global_fcond_res(val):
 		_global_fcond_resource = null
 
 func _init(p_name=""):
-	super._init()
 	name = p_name
 
 func is_entry():

@@ -31,7 +31,6 @@ var _to_free
 
 
 func _init():
-	super._init()
 	_to_free = []
 
 func _ready():

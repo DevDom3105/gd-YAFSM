@@ -21,7 +21,6 @@ var _fcond_resource = null #TODO had onready here. Semms no longer possible in g
 
 
 func _init(p_from="", p_to="", p_conditions={}):
-	super._init()
 	from = p_from
 	to = p_to
 	_conditions = p_conditions
