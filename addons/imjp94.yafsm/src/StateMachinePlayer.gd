@@ -60,7 +60,7 @@ func _ready():
 
 func _register_in_state_workers(node):
 	for n in node.get_children():
-		if n.get_class() == 'StateWorker':
+		if n is StateWorker:
 			n._smp = self
 		elif n is Node:
 			_register_in_state_workers(n)
@@ -79,10 +79,8 @@ func _register_in_funconds(state_machine, state_machine_path):
 		for t in from_transitions.values():
 			if t.has_FunctionCondition():
 				t._fcond_resource._smp = self
-				#print("Registered SMP in transition ", t.from, t.to)
 	for state in state_machine.states.values():
 		if state._global_fcond_resource != null:
-			#print('Registered GLOBAL state ', state_machine_path + '/'+state.name)
 			state._global_fcond_resource._smp = self
 			_global_states.append(state_machine_path + '/'+state.name)
 
