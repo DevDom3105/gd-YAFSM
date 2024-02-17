@@ -17,7 +17,7 @@ var _conditions
 
 @export var function_condition : Resource:
 	set = _set_fcond_res
-var _fcond_resource = null #TODO had onready here. Semms no longer possible in godot 4 where onready vars are only allowed when inheriting from node
+var _fcond_resource = null
 
 
 func _init(p_from="", p_to="", p_conditions={}):

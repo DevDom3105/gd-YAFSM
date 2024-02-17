@@ -15,7 +15,7 @@ const META_GRAPH_OFFSET = "graph_offset" # Meta key for graph_offset
 
 @export var Global_Function_Condition : Resource:
 	set = _set_global_fcond_res
-var _global_fcond_resource = null #TODO had @onready orignially in godot3, But this seems now in godot4 to be only possible for node subclasses...
+var _global_fcond_resource = null
 
 var graph_offset:  # Position in FlowChart stored as meta, for editor only
 	set = set_graph_offset, 
