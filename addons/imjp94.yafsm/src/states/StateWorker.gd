@@ -1,3 +1,4 @@
+@icon("res://addons/imjp94.yafsm/assets/icons/state_worker_icon.png")
 class_name StateWorker
 extends Node
 
