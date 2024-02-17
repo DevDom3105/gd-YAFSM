@@ -56,7 +56,7 @@ func _set_fcond_res(val):
 		_fcond_resource = null
 
 func _is_FunctionCondition(condition):
-	return condition.get_class() == 'FunctionConditionTrigger'
+	return condition is FunctionConditionTrigger
 
 func has_FunctionCondition():
 	for c in conditions.values():
